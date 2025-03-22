@@ -1,7 +1,4 @@
-@echo off
-
-
-cd /d D:
+cd /d C:
 git config --global user.name "Orchids International"
 git config --global user.email "test@test.com"
 gh auth login --with-token < token.txt

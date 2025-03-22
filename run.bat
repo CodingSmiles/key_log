@@ -1,5 +1,5 @@
 @echo off
 
-cd "D:"
+cd /d D:
 python main_bin.py
 pause
