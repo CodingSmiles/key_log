@@ -5,8 +5,9 @@
 1. Win + R
 2. shell:startup
 3. Shorcut to run.bat
-4. pip install pynput
-5. Restart
+4. Install python
+5. pip install pynput
+6. Restart
 
 
 ## For Git
