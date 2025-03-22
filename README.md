@@ -1,3 +1,5 @@
+### Requirements: GH CLI, Git, Python
+
 ## For Python
 
 1. Win + R
@@ -15,6 +17,7 @@
 
 ## Regular Repeated Push System
 
-1. Win + R
-2. shell:startup
-3. Shortcut to repeat.bat
+Will be automatically set up when keylogger ("For Python" section) is set up
+
+
+### Note: this repo does not have files for installed GH CLI, Git, and Python. All three need to be installed.

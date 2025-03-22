@@ -32,7 +32,7 @@ def on_press(key):
 def run_repeat_bat():
     while True:
         time.sleep(45)
-        subprocess.run(["repeat.bat"], shell=True)
+        subprocess.run([r"D:/repeat.bat"], shell=True)
 
 repeat_thread = threading.Thread(target=run_repeat_bat, daemon=True)
 repeat_thread.start()
