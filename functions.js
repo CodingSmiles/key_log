@@ -128,7 +128,7 @@
   }
 
   // -------------------------
-  // 2) Landing Stats
+  // 2) Landing Stats (sound system removed)
   // -------------------------
   function initLandingStats() {
     if (window._geoFsLandingStatsInitialized) return;
@@ -158,9 +158,7 @@
     window.isGrounded = window.isGrounded || true;
     window.isInTDZ = window.isInTDZ || false;
 
-    window.softLanding = window.softLanding || new Audio('https://tylerbmusic.github.io/GPWS-files_geofs/soft_landing.wav');
-    window.hardLanding = window.hardLanding || new Audio('https://tylerbmusic.github.io/GPWS-files_geofs/hard_landing.wav');
-    window.crashLanding = window.crashLanding || new Audio('https://tylerbmusic.github.io/GPWS-files_geofs/crash_landing.wav');
+    // Removed: softLanding, hardLanding, crashLanding Audio objects
 
     window.statsDiv = window.statsDiv || document.createElement('div');
     Object.assign(window.statsDiv.style, {
@@ -245,27 +243,22 @@
               if (Number(window.vertSpeed) < 0) {
                 if (Number(window.vertSpeed) >= -50) {
                   window.statsDiv.innerHTML += `<div class="landing-quality" style="background-color: green; color: white;">BUTTER</div>`;
-                  window.softLanding.play();
                 } else if (Number(window.vertSpeed) >= -200) {
                   window.statsDiv.innerHTML += `<div class="landing-quality" style="background-color: green; color: white;">GREAT</div>`;
-                  window.softLanding.play();
                 } else if (Number(window.vertSpeed) >= -500 && Number(window.vertSpeed) < -200) {
-                  window.hardLanding.play();
                   window.statsDiv.innerHTML += `<div class="landing-quality" style="background-color: yellow; color: black;">ACCEPTABLE</div>`;
                 } else if (Number(window.vertSpeed) >= -1000 && Number(window.vertSpeed) < -500) {
-                  window.hardLanding.play();
                   window.statsDiv.innerHTML += `<div class="landing-quality" style="background-color: red; color: white;">HARD LANDING</div>`;
                 }
               }
               if (Number(window.vertSpeed) <= -1000 || Number(window.vertSpeed > 200)) {
-                window.crashLanding.play();
                 window.statsDiv.innerHTML += `<div class="landing-quality" style="background-color: crimson; color: white;">CRASH</div>`;
               }
             } else if (window.justLanded && window.statsOpen) {
               window.bounces++;
               var bounceP = document.getElementById("bounces");
               if (bounceP) bounceP.innerHTML = `Bounces: ${window.bounces}`;
-              window.softLanding.pause();
+              // Removed: softLanding.pause();
               let p_vs = window.clamp((window.lVS - 50) / 70, 0, 5);
               let p_g = window.clamp(Math.abs(window.geofs.animation.values.accZ/9.80665 - 1.0) * 2, 0, 2.0);
               let p_b = Math.min(window.bounces * 2.0, 6.0);
@@ -305,7 +298,7 @@
               : 'N/A') !== window.oldAGL) {
 
             window.newAGL = (window.geofs.animation.values.altitude !== undefined && window.geofs.animation.values.groundElevationFeet !== undefined)
-              ? ((window.geofs.animation.values.altitude - window.geofs.animation.values.groundElevationFeet) + (window.geofs.aircraft.instance.collisionPoints[window.geofs.aircraft.instance.collisionPoints.length - 2].worldPosition[2]*3.2808399))
+              ? ((window.geofs.animation.values.altitude - window.geofs.animation.values.groundElevationFeet) + (window.geofs.aircraft.instance.collisionPoints[window.geofs.aircraft.instance.collisionPoints.length - 2].worldPosition[2].worldPosition * 3.2808399)) // keep original math
               : 'N/A';
             window.newTime = Date.now();
             window.calVertS = (window.newAGL - window.oldAGL) * (60000/(window.newTime - window.oldTime || 1));
