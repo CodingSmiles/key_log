@@ -1,4 +1,4 @@
-// Merged GeoFS: Spoilers Arming + Landing Stats + Livery Selector
+// Merged GeoFS: Spoilers Arming + Landing Stats (no sounds) + Livery Selector
 (function () {
   'use strict';
 
@@ -128,37 +128,45 @@
   }
 
   // -------------------------
-  // 2) Landing Stats (sound system removed)
+  // 2) Landing Stats (sound system fully removed)
   // -------------------------
+  // OPTIONAL: clean up any old audio objects from previous loads
+  try {
+    if (window.softLanding) { window.softLanding.pause?.(); }
+    if (window.hardLanding) { window.hardLanding.pause?.(); }
+    if (window.crashLanding) { window.crashLanding.pause?.(); }
+    delete window.softLanding;
+    delete window.hardLanding;
+    delete window.crashLanding;
+  } catch (_) {}
+
   function initLandingStats() {
     if (window._geoFsLandingStatsInitialized) return;
     window._geoFsLandingStatsInitialized = true;
 
-    window.MS_TO_KNOTS = window.MS_TO_KNOTS || 1.94384449;
+    window.MS_TO_KNOTS   = window.MS_TO_KNOTS   || 1.94384449;
     window.DEGREES_TO_RAD = window.DEGREES_TO_RAD || 0.017453292519943295;
     window.RAD_TO_DEGREES = window.RAD_TO_DEGREES || 57.29577951308232;
 
-    window.closeTimer = window.closeTimer || false;
+    window.closeTimer   = window.closeTimer   || false;
     window.closeSeconds = window.closeSeconds || 10;
 
     window.refreshRate = window.refreshRate || 20;
-    window.counter = window.counter || 0;
-    window.isLoaded = window.isLoaded || false;
+    window.counter     = window.counter     || 0;
+    window.isLoaded    = window.isLoaded    || false;
 
     window.justLanded = window.justLanded || false;
-    window.vertSpeed = window.vertSpeed || 0;
-    window.oldAGL = window.oldAGL || 0;
-    window.newAGL = window.newAGL || 0;
-    window.calVertS = window.calVertS || 0;
-    window.groundSpeed = window.groundSpeed || 0;
-    window.ktias = window.ktias || 0;
-    window.kTrue = window.kTrue || 0;
-    window.bounces = window.bounces || 0;
-    window.statsOpen = window.statsOpen || false;
+    window.vertSpeed  = window.vertSpeed  || 0;
+    window.oldAGL     = window.oldAGL     || 0;
+    window.newAGL     = window.newAGL     || 0;
+    window.calVertS   = window.calVertS   || 0;
+    window.groundSpeed= window.groundSpeed|| 0;
+    window.ktias      = window.ktias      || 0;
+    window.kTrue      = window.kTrue      || 0;
+    window.bounces    = window.bounces    || 0;
+    window.statsOpen  = window.statsOpen  || false;
     window.isGrounded = window.isGrounded || true;
-    window.isInTDZ = window.isInTDZ || false;
-
-    // Removed: softLanding, hardLanding, crashLanding Audio objects
+    window.isInTDZ    = window.isInTDZ    || false;
 
     window.statsDiv = window.statsDiv || document.createElement('div');
     Object.assign(window.statsDiv.style, {
@@ -192,46 +200,37 @@
             window.justLanded = (geofs.animation.values.groundContact && !window.isGrounded);
             if (window.justLanded && !window.statsOpen) {
               if (window.closeTimer) setTimeout(window.closeLndgStats, 1000*window.closeSeconds);
-              let p_vs = window.clamp((window.lVS - 50) / 70, 0, 5);
-              let p_g = window.clamp(Math.abs(window.geofs.animation.values.accZ/9.80665 - 1.0) * 2, 0, 2.0);
-              let p_b = Math.min(window.bounces * 2.0, 6.0);
-              let p_r = window.clamp(window.lRoll / 10, 0, 1.5);
+              let p_vs  = window.clamp((window.lVS - 50) / 70, 0, 5);
+              let p_g   = window.clamp(Math.abs(window.geofs.animation.values.accZ/9.80665 - 1.0) * 2, 0, 2.0);
+              let p_b   = Math.min(window.bounces * 2.0, 6.0);
+              let p_r   = window.clamp(window.lRoll / 10, 0, 1.5);
               let p_tdz = (window.isInTDZ == true) ? 0 : 1.0;
               window.landingScore = window.clamp((10-p_vs-p_g-p_b-p_r-p_tdz), 0, 10);
-              console.log("Landing score: " + window.landingScore);
               window.statsOpen = true;
 
               window.statsDiv.innerHTML = `
                 <button style="
-                  right: 10px;
-                  top: 10px;
-                  position: absolute;
-                  background: rgba(255,255,255,0.2);
-                  border: none;
-                  color: white;
-                  cursor: pointer;
-                  width: 30px;
-                  height: 30px;
-                  border-radius: 50%;
-                  font-weight: bold;"
+                  right: 10px; top: 10px; position: absolute;
+                  background: rgba(255,255,255,0.2); border: none; color: white;
+                  cursor: pointer; width: 30px; height: 30px; border-radius: 50%; font-weight: bold;"
                   onclick="window.closeLndgStats()">✕</button>
-                  <style>
-                    .info-block { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; }
-                    .landing-quality { grid-column: 1 / -1; text-align: center; font-weight: bold; margin-top: 10px; padding: 5px; border-radius: 5px; }
-                  </style>
-                  <div class="info-block">
-                    <span>Landing Score: ${window.landingScore.toFixed(1)}/10</span>
-                    <span>Vertical speed: ${window.vertSpeed} fpm</span>
-                    <span>G-Forces: ${(window.geofs.animation.values.accZ/9.80665).toFixed(2)}G</span>
-                    <span>Terrain-calibrated V/S: ${window.calVertS.toFixed(1)}</span>
-                    <span>True airspeed: ${window.kTrue} kts</span>
-                    <span>Ground speed: ${window.groundSpeed.toFixed(1)} kts</span>
-                    <span>Indicated speed: ${window.ktias} kts</span>
-                    <span>Roll: ${window.geofs.animation.values.aroll.toFixed(1)} degrees</span>
-                    <span>Tilt: ${window.geofs.animation.values.atilt.toFixed(1)} degrees</span>
-                    <span id="bounces">Bounces: 0</span>
-                  </div>
-                `;
+                <style>
+                  .info-block { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; }
+                  .landing-quality { grid-column: 1 / -1; text-align: center; font-weight: bold; margin-top: 10px; padding: 5px; border-radius: 5px; }
+                </style>
+                <div class="info-block">
+                  <span>Landing Score: ${window.landingScore.toFixed(1)}/10</span>
+                  <span>Vertical speed: ${window.vertSpeed} fpm</span>
+                  <span>G-Forces: ${(window.geofs.animation.values.accZ/9.80665).toFixed(2)}G</span>
+                  <span>Terrain-calibrated V/S: ${window.calVertS.toFixed(1)}</span>
+                  <span>True airspeed: ${window.kTrue} kts</span>
+                  <span>Ground speed: ${window.groundSpeed.toFixed(1)} kts</span>
+                  <span>Indicated speed: ${window.ktias} kts</span>
+                  <span>Roll: ${window.geofs.animation.values.aroll.toFixed(1)} degrees</span>
+                  <span>Tilt: ${window.geofs.animation.values.atilt.toFixed(1)} degrees</span>
+                  <span id="bounces">Bounces: 0</span>
+                </div>
+              `;
 
               window.statsDiv.style.left = '0px';
               window.statsDiv.innerHTML += `
@@ -240,6 +239,7 @@
                   ${(window.geofs.nav && window.geofs.nav.units && window.geofs.nav.units.NAV1 && window.geofs.nav.units.NAV1.inRange) ? `<span>Deviation from center: ${window.geofs.nav.units.NAV1.courseDeviation.toFixed(1)}</span>` : ""}
                 </div>`;
 
+              // Quality badge only (no sounds)
               if (Number(window.vertSpeed) < 0) {
                 if (Number(window.vertSpeed) >= -50) {
                   window.statsDiv.innerHTML += `<div class="landing-quality" style="background-color: green; color: white;">BUTTER</div>`;
@@ -258,14 +258,12 @@
               window.bounces++;
               var bounceP = document.getElementById("bounces");
               if (bounceP) bounceP.innerHTML = `Bounces: ${window.bounces}`;
-              // Removed: softLanding.pause();
-              let p_vs = window.clamp((window.lVS - 50) / 70, 0, 5);
-              let p_g = window.clamp(Math.abs(window.geofs.animation.values.accZ/9.80665 - 1.0) * 2, 0, 2.0);
-              let p_b = Math.min(window.bounces * 2.0, 6.0);
-              let p_r = window.clamp(window.lRoll / 10, 0, 1.5);
+              let p_vs  = window.clamp((window.lVS - 50) / 70, 0, 5);
+              let p_g   = window.clamp(Math.abs(window.geofs.animation.values.accZ/9.80665 - 1.0) * 2, 0, 2.0);
+              let p_b   = Math.min(window.bounces * 2.0, 6.0);
+              let p_r   = window.clamp(window.lRoll / 10, 0, 1.5);
               let p_tdz = (window.isInTDZ == true) ? 0 : 1.0;
               window.landingScore = window.clamp((10-p_vs-p_g-p_b-p_r-p_tdz), 0, 10);
-              console.log("Landing score: " + window.landingScore);
             }
 
             if (!window.geofs.animation.values.groundContact) {
@@ -297,15 +295,13 @@
               ? ((window.geofs.animation.values.altitude - window.geofs.animation.values.groundElevationFeet) + (window.geofs.aircraft.instance.collisionPoints[window.geofs.aircraft.instance.collisionPoints.length - 2].worldPosition[2]*3.2808399))
               : 'N/A') !== window.oldAGL) {
 
-            window.newAGL = (window.geofs.animation.values.altitude !== undefined && window.geofs.animation.values.groundElevationFeet !== undefined)
-              ? ((window.geofs.animation.values.altitude - window.geofs.animation.values.groundElevationFeet) + (window.geofs.aircraft.instance.collisionPoints[window.geofs.aircraft.instance.collisionPoints.length - 2].worldPosition[2].worldPosition * 3.2808399)) // keep original math
-              : 'N/A';
-            window.newTime = Date.now();
-            window.calVertS = (window.newAGL - window.oldAGL) * (60000/(window.newTime - window.oldTime || 1));
-            window.oldAGL = (window.geofs.animation.values.altitude !== undefined && window.geofs.animation.values.groundElevationFeet !== undefined)
-              ? ((window.geofs.animation.values.altitude - window.geofs.animation.values.groundElevationFeet) + (window.geofs.aircraft.instance.collisionPoints[window.geofs.aircraft.instance.collisionPoints.length - 2].worldPosition[2]*3.2808399))
-              : 'N/A';
-            window.oldTime = Date.now();
+          window.newAGL = (window.geofs.animation.values.altitude !== undefined && window.geofs.animation.values.groundElevationFeet !== undefined)
+            ? ((window.geofs.animation.values.altitude - window.geofs.animation.values.groundElevationFeet) + (window.geofs.aircraft.instance.collisionPoints[window.geofs.aircraft.instance.collisionPoints.length - 2].worldPosition[2]*3.2808399))
+            : 'N/A';
+          window.newTime = Date.now();
+          window.calVertS = (window.newAGL - window.oldAGL) * (60000/(window.newTime - window.oldTime || 1));
+          window.oldAGL = window.newAGL;
+          window.oldTime = Date.now();
         }
       } catch (e) {
         console.error('updateCalVertS error', e);
@@ -354,11 +350,9 @@
   // 3) Livery Selector
   // -------------------------
   function initLiverySelector() {
-    // Prevent double init
     if (window._geoFsLiverySelectorInitialized) return;
     window._geoFsLiverySelectorInitialized = true;
 
-    // Paste of your snippet 3 variables and functions (kept almost intact)
     const githubRepo = 'https://raw.githubusercontent.com/kolos26/GEOFS-LiverySelector/main';
     let jsDelivr = 'https://cdn.jsdelivr.net/gh/kolos26/GEOFS-LiverySelector@main';
     const noCommit = jsDelivr;
@@ -385,19 +379,17 @@
         jsDelivr = jsDelivr.replace("@main", `@${commit}`);
       } catch (err) { jsDelivr = githubRepo; }
 
-      // styles
       try {
         fetch(`${jsDelivr}/styles.css?` + Date.now()).then(async data => {
           const styleTag = createTag('style', { type: 'text/css' });
           styleTag.innerHTML = await data.text();
           document.head.appendChild(styleTag);
         });
-      } catch (e) { /* ignore style fetch errors */ }
+      } catch (e) {}
 
       appendNewChild(document.head, 'link', { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' });
       fetch(`${jsDelivr}/livery.json?` + Date.now()).then(handleLiveryJson).catch(e => console.error('livery.json fetch error', e));
 
-      // Panel for list
       const leftUi = document.querySelector('.geofs-ui-left');
       if (leftUi) {
         const listDiv = appendNewChild(leftUi, 'div', {
@@ -410,18 +402,15 @@
         listDiv.innerHTML = generateListHTML();
       }
 
-      // Button for panel
       const geofsUiButton = document.querySelector('.geofs-ui-bottom');
       if (geofsUiButton) {
         const insertPos = geofs.version >= 3.6 ? 4 : 3;
         geofsUiButton.insertBefore(generatePanelButtonHTML(), geofsUiButton.children[insertPos]);
       }
 
-      //remove original buttons
       const origButtons = document.getElementsByClassName('geofs-liveries geofs-list-collapsible-item');
       Object.values(origButtons).forEach(btn => btn.parentElement && btn.parentElement.removeChild(btn));
 
-      //Init airline databases from localStorage links
       if (localStorage.getItem('links') === null) {
         localStorage.links = '';
       } else {
@@ -437,7 +426,6 @@
       }
       fetch(`${jsDelivr}/whitelist.json?` + Date.now()).then(res => res.json()).then(data => whitelist = data).catch(e => console.warn('whitelist fetch', e));
 
-      // Start multiplayer updater
       setInterval(updateMultiplayer, 5000);
 
       window.addEventListener("keyup", function (e) {
@@ -494,7 +482,6 @@
       }
     }
 
-    // --- loadLivery from snippet 3 (keeps original implementation) ---
     function loadLivery(texture, index, parts, mats) {
       for (let i = 0; i < texture.length; i++) {
         const model3d = geofs.aircraft.instance.definition.parts[parts[i]]['3dmodel'];
@@ -566,7 +553,7 @@
             if (!hist) return alert('Only self-uploaded imgbb links work for submitting!');
             if (hist.expiration > 0) return alert('Can\' submit expiring links! DISABLE "Expire links after one hour" option and re-upload texture:\n' + airplane.labels[i]);
             const embed = {
-              title: airplane.labels[i] + ' (' + (Math.ceil(hist.size / 1024 / 10.24) / 100) + 'MB, ' + hist.width + 'x' + hist.height + ')',
+              title: airplane.labels[i] + ' (' + (Math.ceil(hist.size / 1024 / 10.24) / 100) + 'MB, ' + hist.width + 'x' + ' ' + hist.height + ')',
               description: f.value,
               image: { url: f.value },
               fields: [
@@ -875,7 +862,6 @@
       const settings = { 'url': `https://api.imgbb.com/1/upload?key=${localStorage.imgbbAPIKEY}`, 'method': 'POST', 'timeout': 0, 'processData': false, 'mimeType': 'multipart/form-data', 'contentType': false, 'data': form };
       $.ajax(settings).done(function (response) {
         const jx = JSON.parse(response);
-        console.log(jx.data.url);
         fileInput.nextSibling.value = jx.data.url;
         fileInput.value = null;
         if (!uploadHistory[jx.data.id] || (uploadHistory[jx.data.id].expiration !== jx.data.expiration)) {
@@ -1085,7 +1071,6 @@
       return canvas.toDataURL('image/png');
     }
 
-    // Utilities (createTag, appendNewChild, removeItem, domById, generateListHTML, generatePanelButtonHTML, togglePanel)
     function toggleDiv(id) {
       const div = domById(id);
       const target = window.event && window.event.target;
@@ -1212,7 +1197,6 @@
       console.timeEnd('listLiveries');
     }
 
-    // Expose API
     window.LiverySelector = {
       liveryobj,
       loadLivery,
@@ -1233,6 +1217,6 @@
       airlineobjs,
       togglePanel
     };
-  } // end initLiverySelector
+  }
 
 })(); // end merged IIFE
